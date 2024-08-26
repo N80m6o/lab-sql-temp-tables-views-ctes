@@ -1,6 +1,7 @@
 use sakila;
 
 ##Step 1: Create a View for Rental Summary
+DROP VIEW IF EXISTS customer_rental_summary;
 CREATE VIEW customer_rental_summary AS
 SELECT 
     c.customer_id,
@@ -27,24 +28,21 @@ CREATE TEMPORARY TABLE customer_payment_summary AS (
 );
 
 ##Step 3: Create a CTE and Generate the Customer Summary Report
-WITH customer_summary AS (
-    SELECT 
-        crs.first_name,
-        crs.last_name,
-        crs.email,
-        crs.rental_count,
-        cps.total_paid,
-        (cps.total_paid / crs.rental_count) AS average_payment_per_rental
-    FROM 
-        customer_rental_summary crs
-        JOIN customer_payment_summary cps ON crs.customer_id = cps.customer_id
-)
+WITH customer_summary_report AS(
 SELECT 
-    first_name,
-    last_name,
-    email,
-    rental_count,
-    total_paid,
-    average_payment_per_rental
+    crs.customer_name,
+    crs.email,
+    crs.rental_count,
+    cps.total_paid
 FROM 
-    customer_summary;
+    customer_rental_summary AS crs
+    JOIN customer_payment_summary AS cps ON crs.customer_id = cps.customer_id)
+
+-- Create the query to generate the customer summary report.
+SELECT 
+    *,
+    total_paid / rental_count AS average_payment_per_rental
+FROM 
+    customer_summary_report
+ORDER BY 
+    rental_count DESC;
